@@ -117,10 +117,15 @@ async fn run_server() -> Result<()> {
     for job in shared_jobs.iter() {
         let job = job.clone();
         let mut stop = shutdown_tx.subscribe();
+
+        // 每一個任務配一個coroutines來處理. 併發跑
         tokio::spawn(async move {
             loop {
+                // job.schedule.upcoming會計算出下一次需要執行的時間
                 if let Some(next) = job.schedule.upcoming(Utc).next() {
                     let now = Utc::now();
+
+                    // 計算出需要等待的時間，避免每秒檢查
                     let sleep_duration = if next > now {
                         (next - now).to_std().unwrap_or(Duration::from_secs(0))
                     } else {
@@ -128,6 +133,7 @@ async fn run_server() -> Result<()> {
                     };
 
                     tokio::select! {
+                        // 該任務會sleep直到需要執行的時候再喚起
                         _ = sleep(sleep_duration) => {
                             log::info!("執行任務: {}", job.cmd);
                             if let Err(e) = Command::new("sh").arg("-c").arg(&job.cmd).status() {
