@@ -143,7 +143,26 @@ async fn run_server(args: Vec<String>) -> Result<()> {
         // 前 6 個部分組成 Cron 表達式，剩下的部分是指令
         let parts: Vec<&str> = line.split_whitespace().collect();
         if parts.len() >= 7 {
-            let schedule_str = parts[0..6].join(" ");
+            let mut cron_parts: Vec<String> = parts[0..6].iter().map(|s| s.to_string()).collect();
+
+            // 取得「週」這個欄位 (索引為 5)
+            let dow = &cron_parts[5]; // day of week
+
+            // 不改前的對應: 1-7 對應 日一二三...六
+            //                 要改成 一二三...  日
+            // 即1=>2, 2=>3, ...6=>7
+            // https://crontab.guru/#5_4_*_*_0
+            // https://crontab.guru/#5_4_*_*_7 👈 這個有些cron是不支持的.
+            if let Ok(val) = dow.parse::<u32>() {
+                let converted_dow = match val {
+                    0 | 7 => 1,       // 0,7都是指星期日(Sun)
+                    1..=6 => val + 1, // 1-6 變 2-7
+                    _ => val,         // 超出範圍交給 Schedule::from_str 報錯
+                };
+                cron_parts[5] = converted_dow.to_string();
+            }
+
+            let schedule_str = cron_parts.join(" ");
             let cmd_str = parts[6..].join(" ");
 
             match Schedule::from_str(&schedule_str) {
