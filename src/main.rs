@@ -100,8 +100,8 @@ async fn run_server(args: Vec<String>) -> Result<()> {
     while i < args.len() {
         match args[i].as_str() {
             "-utc" => {
-                let offset_hours = if i + 1 < args.len() && !args[i+1].starts_with('-') {
-                    let val = args[i+1].parse::<i32>().context("無效的時區偏移量")?;
+                let offset_hours = if i + 1 < args.len() && !args[i + 1].starts_with('-') {
+                    let val = args[i + 1].parse::<i32>().context("無效的時區偏移量")?;
                     i += 1;
                     val
                 } else {
@@ -179,8 +179,11 @@ async fn run_server(args: Vec<String>) -> Result<()> {
 
                 // job.schedule.upcoming會計算出下一次需要執行的時間
                 // if let Some(next) = job.schedule.upcoming(Utc).next() {
-                if let Some(next) = job.schedule.upcoming(current_time_mode.now().timezone()).next() {
-
+                if let Some(next) = job
+                    .schedule
+                    .upcoming(current_time_mode.now().timezone())
+                    .next()
+                {
                     // 計算出需要等待的時間，避免每秒檢查
                     let sleep_duration = if next > now {
                         (next - now).to_std().unwrap_or(Duration::from_secs(0))
