@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use chrono::{Utc};
+use chrono::Utc;
 use cron::Schedule;
 use serde::{Deserialize, Serialize};
 use std::env;
@@ -10,8 +10,8 @@ use std::str::FromStr;
 use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{UnixListener, UnixStream};
-use tokio::sync::{broadcast};
-use tokio::time::{sleep, Duration};
+use tokio::sync::broadcast;
+use tokio::time::{Duration, sleep};
 
 #[derive(Serialize, Deserialize, Debug)]
 enum DaemonCommand {
