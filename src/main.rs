@@ -1,5 +1,5 @@
-use anyhow::{Context, Result};
-use chrono::Utc;
+use anyhow::{Context, Result, anyhow};
+use chrono::{DateTime, FixedOffset, Local, Utc};
 use cron::Schedule;
 use serde::{Deserialize, Serialize};
 use std::env;
@@ -25,6 +25,27 @@ struct Job {
     cmd: String,
 }
 
+/// 定義時區模式
+#[derive(Clone, Copy)]
+enum TimeMode {
+    Local,
+    Utc(FixedOffset),
+}
+
+impl TimeMode {
+    /// 獲取當前時間（根據設定的時區）
+    fn now(&self) -> DateTime<FixedOffset> {
+        match self {
+            TimeMode::Local => {
+                let local_now = Local::now();
+                let offset = *local_now.offset();
+                local_now.with_timezone(&offset)
+            }
+            TimeMode::Utc(offset) => Utc::now().with_timezone(offset),
+        }
+    }
+}
+
 const SOCKET_PATH: &str = "/tmp/rcron.sock";
 
 #[tokio::main]
@@ -32,11 +53,12 @@ async fn main() -> Result<()> {
     env_logger::init();
     let args: Vec<String> = env::args().collect();
 
-    if args.len() > 1 && args[1].starts_with('-') {
+    // 檢查是否為客戶端模式
+    if args.len() > 1 && args[1].starts_with('-') && args[1] != "-utc" {
         return run_client(&args).await;
     }
 
-    run_server().await
+    run_server(args).await
 }
 
 async fn run_client(args: &[String]) -> Result<()> {
@@ -67,8 +89,39 @@ async fn run_client(args: &[String]) -> Result<()> {
     Ok(())
 }
 
-async fn run_server() -> Result<()> {
+async fn run_server(args: Vec<String>) -> Result<()> {
     log::info!("Rust Crontab Daemon 啟動！");
+
+    // 解析時區參數與檔案路徑
+    let mut time_mode = TimeMode::Local;
+    let mut _crontab_path = None;
+    let mut i = 1;
+
+    while i < args.len() {
+        match args[i].as_str() {
+            "-utc" => {
+                let offset_hours = if i + 1 < args.len() && !args[i+1].starts_with('-') {
+                    let val = args[i+1].parse::<i32>().context("無效的時區偏移量")?;
+                    i += 1;
+                    val
+                } else {
+                    0 // 預設 UTC+0
+                };
+                let offset = FixedOffset::east_opt(offset_hours * 3600)
+                    .ok_or_else(|| anyhow!("時區偏移超出範圍"))?;
+                time_mode = TimeMode::Utc(offset);
+            }
+            path if !path.starts_with('-') => {
+                _crontab_path = Some(path.to_string());
+            }
+            _ => {}
+        }
+        i += 1;
+    }
+    match time_mode {
+        TimeMode::Local => log::info!("使用時區: Local"),
+        TimeMode::Utc(o) => log::info!("使用時區: UTC{:?}({}秒)", o, o.local_minus_utc()),
+    }
 
     let crontab_path = env::args()
         .nth(1)
@@ -117,13 +170,16 @@ async fn run_server() -> Result<()> {
     for job in shared_jobs.iter() {
         let job = job.clone();
         let mut stop = shutdown_tx.subscribe();
+        let current_time_mode = time_mode;
 
         // 每一個任務配一個coroutines來處理. 併發跑
         tokio::spawn(async move {
             loop {
+                let now = current_time_mode.now();
+
                 // job.schedule.upcoming會計算出下一次需要執行的時間
-                if let Some(next) = job.schedule.upcoming(Utc).next() {
-                    let now = Utc::now();
+                // if let Some(next) = job.schedule.upcoming(Utc).next() {
+                if let Some(next) = job.schedule.upcoming(current_time_mode.now().timezone()).next() {
 
                     // 計算出需要等待的時間，避免每秒檢查
                     let sleep_duration = if next > now {
@@ -158,6 +214,7 @@ async fn run_server() -> Result<()> {
             Ok((mut stream, _)) = listener.accept() => {
                 let jobs_ref = shared_jobs.clone();
                 let tx = shutdown_tx.clone();
+                let current_time_mode = time_mode;
                 tokio::spawn(async move {
                     let mut buffer = Vec::new();
                     stream.read_to_end(&mut buffer).await.ok();
@@ -174,9 +231,11 @@ async fn run_server() -> Result<()> {
                                 if jobs_ref.is_empty() {
                                     res.push_str("(No jobs loaded)\n");
                                 }
+                                let now = current_time_mode.now();
                                 for job in jobs_ref.iter() {
                                     res.push_str(&format!("- Command: {}\n", job.cmd));
-                                    for time in job.schedule.upcoming(Utc).take(n) {
+                                    // for time in job.schedule.upcoming(Utc).take(n) {
+                                    for time in job.schedule.upcoming(now.timezone()).take(n) {
                                         res.push_str(&format!("  Next: {}\n", time.to_rfc3339()));
                                     }
                                 }
