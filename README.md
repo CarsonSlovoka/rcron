@@ -7,6 +7,13 @@
 
 為了讓原本的內容可以繼續作業，所以才開發此專案
 
+## Install
+
+```sh
+cargo install --git https://github.com/CarsonSlovoka/rcron.git
+cargo install --list | grep rcron # 查看版本
+```
+
 
 ## USAGE
 
