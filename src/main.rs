@@ -1,5 +1,6 @@
 use anyhow::{Context, Result, anyhow};
 use chrono::{DateTime, FixedOffset, Local, Utc};
+use colored::*;
 use cron::Schedule;
 use serde::{Deserialize, Serialize};
 use std::env;
@@ -62,14 +63,24 @@ async fn main() -> Result<()> {
 }
 
 async fn run_client(args: &[String]) -> Result<()> {
+    let help = "
+Usage:
+-q\t停止伺服器
+-l [N]\t列出每一個任務中的接下來N個觸發時間
+";
     let cmd = match args[1].as_str() {
         "-q" => DaemonCommand::Quit,
         "-l" => {
             let n = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(5);
             DaemonCommand::List(n)
         }
+        "-h" | "--help" => {
+            println!("{}", help);
+            return Ok(());
+        }
+
         _ => {
-            println!("未知參數。用法:\n  -q\t\t停止伺服器\n  -l [N]\t列出接下來 N 個任務");
+            println!("未知參數。用法:{}", help);
             return Ok(());
         }
     };
@@ -90,7 +101,10 @@ async fn run_client(args: &[String]) -> Result<()> {
 }
 
 async fn run_server(args: Vec<String>) -> Result<()> {
-    log::info!("Rust Crontab Daemon 啟動！");
+    println!(
+        "rcron伺服器已經啟動！\n可以開始透過指令來互動, 如果不曉得可以做什麼, 可以使用{}來查看幫助",
+        "rcron -h".green()
+    );
 
     // 解析時區參數與檔案路徑
     let mut time_mode = TimeMode::Local;

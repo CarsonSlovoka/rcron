@@ -44,6 +44,7 @@ cargo install --list | grep rcron
 
 RUST_LOG=info rcron example.crontab # 啟動，並指定檔案(預設檔案為: ~/.crontab )
 RUST_LOG=info rcron example.crontab & # 可以繼續動作
+# Note:  RUST_LOG 的環境變數不一定要指派, 如果完全都不想要有訊息，可以省略
 jobs # 可以看到背景正在執行的工作
 
 # 接下來可以在開一個終端機來做互動

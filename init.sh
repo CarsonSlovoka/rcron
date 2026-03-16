@@ -9,3 +9,5 @@ cargo add env_logger
 cargo add serde -F derive
 cargo add serde_json
 
+cargo add colored
+

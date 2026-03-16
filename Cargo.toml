@@ -8,6 +8,7 @@ authors = ["Carson <jackparadise520a@gmail.com>"]
 anyhow = "1.0.102"
 chrono = { version = "0.4.44", features = ["serde"] }
 clap = { version = "4.5.60", features = ["derive"] }
+colored = "3.1.1"
 cron = "0.15.0"
 daemonize = "0.5.0"
 env_logger = "0.11.9"
