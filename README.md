@@ -52,3 +52,9 @@ rcron -l
 rcron -l 2
 rcron -q
 ```
+
+> [!NOTE] 透過[fg](https://man.archlinux.org/man/fg.1p)可以切換工作
+
+
+> [!NOTE] 使用[bg](https://man.archlinux.org/man/bg.1p)可以再背景作業
+
