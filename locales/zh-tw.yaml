@@ -1,7 +1,25 @@
+msg:
+  server-running: "rcron伺服器已經啟動！\n可以開始透過指令來互動, 如果不曉得可以做什麼, 可以使用%{help}來查看幫助"
+  which-timezone: "使用時區: %{local}"
+  run-command: "執行任務: %{cmd}"
+
+time:
+  sec: "秒"
+
 usage:
+  usage: "使用方法"
   stop_server: "停止伺服器"
   l_help: "列出每一個任務中的接下來N個觸發時間"
 
+warn:
+  do_not_import_anything: "沒有載入任何有效的任務！"
 
-errors:
+err:
   unknown_para: "未知參數。用法: %{usage}"
+  socket_connect: "無法連接到 Daemon，請確認伺服器是否正在執行"
+  invalid_timezone_offset: "無效的時區偏移量"
+  timezone_overflow: "時區偏移超出範圍"
+  unable_read_file: "無法讀取 %{filename} 檔案: %{path}"
+  parse_error: "解析失敗: 行: %{line}: %{err}"
+  unknown_timeformat: "格式不正確 (需要 6 位時間格式 + 指令): %{line}"
+  run_cmd_error: "任務執行報錯 %{err}"

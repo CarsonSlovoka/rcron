@@ -70,11 +70,16 @@ async fn main() -> Result<()> {
 }
 
 async fn run_client(args: &[String]) -> Result<()> {
-    let help = "
-Usage:
--q\t停止伺服器
--l [N]\t列出每一個任務中的接下來N個觸發時間
-";
+    let help = format!(
+        "
+{}
+-q\t{}
+-l [N]\t{}
+",
+        t!("usage.usage"),
+        t!("usage.stop_server"),
+        t!("usage.l_help"),
+    );
     let cmd = match args[1].as_str() {
         "-q" => DaemonCommand::Quit,
         "-l" => {
@@ -82,19 +87,19 @@ Usage:
             DaemonCommand::List(n)
         }
         "-h" | "--help" => {
-            println!("{}", help);
+            println!("{:?}", help);
             return Ok(());
         }
 
         _ => {
-            println!("{}", t!("errors.unknown_para", usage = help));
+            println!("{}", t!("err.unknown_para", usage = help));
             return Ok(());
         }
     };
 
     let mut stream = UnixStream::connect(SOCKET_PATH)
         .await
-        .context("無法連接到 Daemon，請確認伺服器是否正在執行")?;
+        .context(t!("err.socket_connect"))?;
 
     let payload = serde_json::to_vec(&cmd)?;
     stream.write_all(&payload).await?;
@@ -108,10 +113,7 @@ Usage:
 }
 
 async fn run_server(args: Vec<String>) -> Result<()> {
-    println!(
-        "rcron伺服器已經啟動！\n可以開始透過指令來互動, 如果不曉得可以做什麼, 可以使用{}來查看幫助",
-        "rcron -h".green()
-    );
+    println!("{}", t!("msg.server-running", help = "rcron -h".green()));
 
     // 解析時區參數與檔案路徑
     let mut time_mode = TimeMode::Local;
@@ -122,14 +124,16 @@ async fn run_server(args: Vec<String>) -> Result<()> {
         match args[i].as_str() {
             "-utc" => {
                 let offset_hours = if i + 1 < args.len() && !args[i + 1].starts_with('-') {
-                    let val = args[i + 1].parse::<i32>().context("無效的時區偏移量")?;
+                    let val = args[i + 1]
+                        .parse::<i32>()
+                        .context(t!("err.invalid_timezone_offset").red())?;
                     i += 1;
                     val
                 } else {
                     0 // 預設 UTC+0
                 };
                 let offset = FixedOffset::east_opt(offset_hours * 3600)
-                    .ok_or_else(|| anyhow!("時區偏移超出範圍"))?;
+                    .ok_or_else(|| anyhow!(t!("err.timezone_overflow").red()))?;
                 time_mode = TimeMode::Utc(offset);
             }
             path if !path.starts_with('-') => {
@@ -139,9 +143,17 @@ async fn run_server(args: Vec<String>) -> Result<()> {
         }
         i += 1;
     }
+
     match time_mode {
-        TimeMode::Local => log::info!("使用時區: Local"),
-        TimeMode::Utc(o) => log::info!("使用時區: UTC{:?}({}秒)", o, o.local_minus_utc()),
+        TimeMode::Local => log::info!("{}", t!("msg.which-timezone", local = "Local")),
+        // TimeMode::Utc(o) => log::info!("使用時區: UTC{:?}({}秒)", o, o.local_minus_utc()),
+        TimeMode::Utc(o) => log::info!(
+            "{}",
+            t!(
+                "msg.which-timezone",
+                local = format!("UTC{:?} ({}{})", o, o.local_minus_utc(), t!("time.sec"))
+            )
+        ),
     }
 
     let crontab_path = env::args()
@@ -149,8 +161,16 @@ async fn run_server(args: Vec<String>) -> Result<()> {
         .filter(|a| !a.starts_with('-'))
         .unwrap_or_else(|| format!("{}/.crontab", env::var("HOME").unwrap()));
 
-    let content = fs::read_to_string(&crontab_path)
-        .with_context(|| format!("無法讀取 crontab 檔案: {}", crontab_path))?;
+    let content = fs::read_to_string(&crontab_path).with_context(|| {
+        format!(
+            "{}",
+            t!(
+                "err.unable_read_file",
+                filename = "crontab",
+                path = crontab_path.red(),
+            )
+        )
+    })?;
 
     let mut jobs = Vec::new();
 
@@ -193,15 +213,15 @@ async fn run_server(args: Vec<String>) -> Result<()> {
                         cmd: cmd_str,
                     });
                 }
-                Err(e) => log::error!("解析失敗 行 '{}': {}", line, e),
+                Err(e) => log::error!("{}", t!("err.parse_error", line = line, err = e)),
             }
         } else {
-            log::warn!("格式不正確 (需要 6 位時間格式 + 指令): {}", line);
+            log::warn!("{}", t!("err.unknown_timeformat", line = line.red()));
         }
     }
 
     if jobs.is_empty() {
-        log::warn!("警告：沒有載入任何有效的任務！");
+        log::warn!("{}", t!("warn.do_not_import_anything").yellow());
     }
 
     let shared_jobs = Arc::new(jobs);
@@ -234,9 +254,9 @@ async fn run_server(args: Vec<String>) -> Result<()> {
                     tokio::select! {
                         // 該任務會sleep直到需要執行的時候再喚起
                         _ = sleep(sleep_duration) => {
-                            log::info!("執行任務: {}", job.cmd);
+                            log::info!("{}", t!("msg.run-command", cmd = job.cmd.green()));
                             if let Err(e) = Command::new("sh").arg("-c").arg(&job.cmd).status() {
-                                log::error!("任務執行報錯: {}", e);
+                                log::error!("{}", t!("err.run_cmd_error", err=format!("{}", e).red()));
                             }
                             sleep(Duration::from_secs(1)).await;
                         }
