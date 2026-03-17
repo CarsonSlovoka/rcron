@@ -70,16 +70,8 @@ async fn main() -> Result<()> {
 }
 
 async fn run_client(args: &[String]) -> Result<()> {
-    let help = format!(
-        "
-{}
--q\t{}
--l [N]\t{}
-",
-        t!("usage.usage"),
-        t!("usage.stop_server"),
-        t!("usage.l_help"),
-    );
+    let help = format!("{}", t!("usage.client"));
+
     let cmd = match args[1].as_str() {
         "-q" => DaemonCommand::Quit,
         "-l" => {
@@ -87,10 +79,9 @@ async fn run_client(args: &[String]) -> Result<()> {
             DaemonCommand::List(n)
         }
         "-h" | "--help" => {
-            println!("{:?}", help);
+            println!("{}", help);
             return Ok(());
         }
-
         _ => {
             println!("{}", t!("err.unknown_para", usage = help));
             return Ok(());

@@ -1,5 +1,8 @@
 msg:
-  server-running: "The rcron server has been activated! \nYou can start interacting through instructions. If you don't know what to do, you can use %{help} to view help."
+  server-running: |
+    The rcron server has been activated!
+    You can start interacting through instructions.
+    If you don't know what to do, you can use %{help} to view help.
   which-timezone: "Use the time zone: %{local}"
   run-command: "run command: %{cmd}"
 
@@ -7,15 +10,18 @@ time:
   sec: "sec"
 
 usage:
-  usage: "Usage"
-  stop_server: "Stop server"
-  l_help: "List the next N trigger times in each task"
+  client: |
+    Usage:
+    -q      Stop server
+    -l [N]  List the next N trigger times in each task
 
 warn:
   do_not_import_anything: "no any tasks are loaded!"
 
 err:
-  unknown_para: "Unknown parameter. Usage: %{usage}"
+  unknown_para: |
+    Unknown parameter. Usage:
+    %{usage}
   socket_connect: "Unable to connect to Daemon, please confirm whether the server is running."
   invalid_timezone_offset: "Invalid time zone offset"
   timezone_overflow: "The time zone offset is out of range"
