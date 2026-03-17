@@ -46,6 +46,9 @@ RUST_LOG=info rcron example.crontab # 啟動，並指定檔案(預設檔案為: 
 RUST_LOG=info rcron example.crontab & # 可以繼續動作
 # Note:  RUST_LOG 的環境變數不一定要指派, 如果完全都不想要有訊息，可以省略
 
+RUST_LOG=info LANG=zh-tw rcron # 可以設定LANG來改成想要的語言
+RUST_LOG=info LANG=en-us rcron
+
 rcron -utc 8 # 預設用local的時間，而如果您的設定檔的時間是指某個特定的utc時間也可以透過這種方式來指派
 
 jobs # 可以看到背景正在執行的工作

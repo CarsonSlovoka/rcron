@@ -14,6 +14,10 @@ use tokio::net::{UnixListener, UnixStream};
 use tokio::sync::broadcast;
 use tokio::time::{Duration, sleep};
 
+rust_i18n::i18n!("locales", fallback = "en");
+pub use rust_i18n::t;
+// use lib::{i18n::init};
+
 #[derive(Serialize, Deserialize, Debug)]
 enum DaemonCommand {
     List(usize),
@@ -52,6 +56,9 @@ const SOCKET_PATH: &str = "/tmp/rcron.sock";
 #[tokio::main]
 async fn main() -> Result<()> {
     env_logger::init();
+
+    lib::i18n::init();
+
     let args: Vec<String> = env::args().collect();
 
     // 檢查是否為客戶端模式
@@ -80,7 +87,7 @@ Usage:
         }
 
         _ => {
-            println!("未知參數。用法:{}", help);
+            println!("{}", t!("errors.unknown_para", usage = help));
             return Ok(());
         }
     };

@@ -1,0 +1,7 @@
+usage:
+  stop_server: "停止伺服器"
+  l_help: "列出每一個任務中的接下來N個觸發時間"
+
+
+errors:
+  unknown_para: "未知參數。用法: %{usage}"

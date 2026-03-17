@@ -11,3 +11,7 @@ cargo add serde_json
 
 cargo add colored
 
+
+# 本地化
+cargo add rust-i18n # https://github.com/longbridge/rust-i18n  # https://crates.io/crates/rust-i18n
+cargo add sys-locale # https://github.com/1Password/sys-locale # https://crates.io/crates/sys-locale  # 系統可以自動偵測

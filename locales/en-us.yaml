@@ -1,0 +1,8 @@
+usage:
+  stop_server: "Stop server"
+  l_help: "l help"
+
+
+errors:
+  unknown_para: "Unknown parameter. Usage: %{usage}"
+
