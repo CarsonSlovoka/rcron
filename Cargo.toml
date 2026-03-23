@@ -13,7 +13,7 @@ description = """
 emoji. Scheduling tools for setting periodic automatic execution tasks
 """
 # homepage = "https://..."
-keywords = ["command-line", "task", "crontab", "cron", "schedule", "notify"]
+keywords = ["command-line", "task", "crontab", "schedule", "notify"] # 最多5個, 不然會得到錯誤: `expected at most 5 keywords per crate`
 categories = ["command-line-utilities"]
 rust-version = "1.94.0"
 
