@@ -2,7 +2,20 @@
 name = "rcron"
 version = "0.1.0"
 edition = "2024"
+
 authors = ["Carson <jackparadise520a@gmail.com>"]
+repository = "https://github.com/CarsonSlovoka/rcron"
+# documentation = "https://docs.rs/..."
+license = "MIT"
+readme = "README.md" # 也可以考慮寫一個crates-io-readme.md
+# exclude = ["/screenshot.png", "..."]
+description = """
+emoji. Scheduling tools for setting periodic automatic execution tasks
+"""
+# homepage = "https://..."
+keywords = ["command-line", "task", "crontab", "cron", "schedule", "notify"]
+categories = ["command-line-utilities"]
+rust-version = "1.94.0"
 
 [lib]
 name = "lib"
