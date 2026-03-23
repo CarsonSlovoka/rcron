@@ -9,6 +9,15 @@
 
 ## Install
 
+
+從[crates](https://crates.io/crates/rcrontab)安裝
+
+```sh
+cargo install rcrontab
+```
+
+用git來安裝
+
 ```sh
 cargo install --git https://github.com/CarsonSlovoka/rcron.git
 cargo install --list | grep rcron # 查看版本
